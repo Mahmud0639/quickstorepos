@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "593101512782",
+    "project_id": "quick-store-mithu",
+    "storage_bucket": "quick-store-mithu.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:593101512782:android:b39ad3d28ace8547d3e31f",
+        "android_client_info": {
+          "package_name": "com.mahmiu.quick_store_pos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSBgaRfJWEBIvmnKl_Sw7N-UcRR3430Ic"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
