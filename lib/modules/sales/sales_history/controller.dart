@@ -1,5 +1,6 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
@@ -82,6 +83,38 @@ class SalesHistoryController extends GetxController{
     }
 
     calculateSummary();
+  }
+  
+  void deleteInvoice(DocumentSnapshot doc)async{
+    try{
+      isLoading(true);
+      var data = doc.data() as Map<String,dynamic>;
+      List items = data['items'] ?? [];
+
+      WriteBatch batch = _firestore.batch();
+
+      for(var item in items){
+        String productId = item['id'];
+        int quantitySold = int.tryParse(item['quantity']?.toString() ?? '0') ?? 0;
+
+        DocumentReference productRef = _firestore.collection('products').doc(productId);
+
+        batch.update(productRef, {
+          'stock':FieldValue.increment(quantitySold)
+        });
+      }
+      
+      batch.delete(doc.reference);
+      await batch.commit();
+      
+      Get.back();
+      Get.snackbar("সফল", "মেমোটি ডিলিট এবং স্টক আপডেট করা হয়েছে।",backgroundColor: Colors.white);
+
+    }catch(e){
+      Get.snackbar("Error", "ডিলিট করতে সমস্যা হয়েছে: $e");
+    }finally{
+      isLoading(false);
+    }
   }
 
 }

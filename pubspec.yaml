@@ -42,6 +42,7 @@ dependencies:
   flutter_screenutil:
   dropdown_search: ^6.0.2
   intl:
+  screenshot: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -81,10 +82,10 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
+  fonts:
+    - family: BanglaFont
+      fonts:
+       - asset: assets/fonts/Nikosh.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro
