@@ -43,6 +43,7 @@ dependencies:
   dropdown_search: ^6.0.2
   intl:
   screenshot: ^3.0.0
+  fl_chart: ^1.1.1
 
 dev_dependencies:
   flutter_test:

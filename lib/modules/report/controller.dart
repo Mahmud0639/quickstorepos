@@ -1,65 +1,113 @@
+
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-class ReportController extends GetxController{
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class ReportController extends GetxController {
 
-    var isLoading = true.obs;
-    var selectedDate = DateTime.now().obs;
 
-    var todayNetProfit = 0.0.obs;//ajker nit lav
-    var totalInventoryValue = 0.0.obs;//mot inventory value(kena dame)
-    var potentialProfit = 0.0.obs;//somvabbo mot lav
-    var todaySoldItems = 0.obs;//bikrito items songkha
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  StreamSubscription? _salesSubscription;
+  var chartData = <DateTime, double>{}.obs;
 
-    @override
+
+  var isLoading = false.obs;
+  var selectedRange = DateTimeRange(
+    start: DateTime.now(),
+    end: DateTime.now(),
+  ).obs;
+
+  var netProfit = 0.0.obs;
+  var totalSales = 0.0.obs;
+  var soldItemsCount = 0.obs;
+
+  @override
   void onInit() {
-    // TODO: implement onInit
     super.onInit();
     fetchReportData();
   }
 
-  //date change hole data refresh hobe
-  void updateDate(DateTime date){
-      selectedDate.value = date;
-      fetchReportData();
+  void updateDateRange(DateTimeRange range) {
+    selectedRange.value = range;
+    fetchReportData();
   }
 
-  Future<void> fetchReportData()async{
-      try{
-        isLoading(true);
-        String dateStr = DateFormat('yyyy-MM-dd').format(selectedDate.value);
-        //fetching today sold data for the net profit and sold items
-        var salesSnapshot = await _firestore.collection('sales')
-                                  .where('date',isEqualTo: dateStr)
-                                  .get();
+  void fetchReportData() {
+    _salesSubscription?.cancel();
 
-        //fetching all the products data
-        var productSnapshot = await _firestore.collection('products').get();
-        calculateMetrics(salesSnapshot.docs, productSnapshot.docs);
+    isLoading(true);
 
+    String startDateStr = DateFormat('yyyy-MM-dd').format(selectedRange.value.start);
+    String endDateStr = DateFormat('yyyy-MM-dd').format(selectedRange.value.end);
 
-      }finally{
-        isLoading(false);
+    _salesSubscription = _firestore.collection('sales')
+        .where('date', isGreaterThanOrEqualTo: startDateStr)
+        .where('date', isLessThanOrEqualTo: endDateStr)
+        .snapshots()
+        .listen((snapshot) {
+
+      calculateMetrics(snapshot.docs);
+      isLoading(false);
+
+    }, onError: (e) {
+      isLoading(false);
+      Get.snackbar("Error", "ডাটা আপডেট হতে সমস্যা হয়েছে");
+    });
+  }
+
+  void calculateMetrics(List<DocumentSnapshot> salesDocs) {
+    double tempProfit = 0.0;
+    double tempSales = 0.0;
+    int tempItems = 0;
+    Map<DateTime, double> dateWiseSales = {};
+
+    for (var doc in salesDocs) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+      double salePrice = (data['totalPrice'] ?? 0.0).toDouble();
+      double costPrice = (data['totalPurchasePrice'] ?? 0.0).toDouble();
+      int qty = int.tryParse(data['totalQuantity'].toString()) ?? 0;
+
+      DateTime saleDate = DateFormat('yyyy-MM-dd').parse(data['date']);
+
+      tempSales += salePrice;
+      tempItems += qty;
+      tempProfit += (salePrice - costPrice);
+
+      dateWiseSales[saleDate] = (dateWiseSales[saleDate] ?? 0) + salePrice;
+    }
+
+    totalSales.value = tempSales;
+    netProfit.value = tempProfit;
+    soldItemsCount.value = tempItems;
+
+    var sortedMap = Map.fromEntries(
+        dateWiseSales.entries.toList()..sort((a, b) => a.key.compareTo(b.key))
+    );
+    chartData.value = sortedMap;
+  }
+
+  @override
+  void onClose() {
+    _salesSubscription?.cancel();
+    super.onClose();
+  }
+
+  String get reportHeader {
+    final start = selectedRange.value.start;
+    final end = selectedRange.value.end;
+    final today = DateTime.now();
+
+    if (DateFormat('yyyy-MM-dd').format(start) == DateFormat('yyyy-MM-dd').format(end)) {
+      if (start.day == today.day && start.month == today.month && start.year == today.year) {
+        return "আজকের রিপোর্ট";
       }
+      return DateFormat('dd MMMM, yyyy').format(start);
+    }
+
+    return "${DateFormat('dd MMM').format(start)} - ${DateFormat('dd MMM, yyyy').format(end)}";
   }
-
-  void calculateMetrics(List<DocumentSnapshot> sales, List<DocumentSnapshot> products){
-      double netProfit = 0.0;
-      int soldCount = 0;
-      double inventoryVal = 0.0;
-      double potential = 0.0;
-      
-      for(var doc in sales){
-        double totalSale = double.tryParse(doc['totalPrice'].toString()) ?? 0.0;
-        double totalCost = double.tryParse(doc['totalPurchasePrice'].toString()) ?? 0.0;
-        int qty = int.tryParse(doc['totalQuantity'].toString()) ?? 1;
-
-        netProfit += (totalSale - totalCost);
-        soldCount += qty;
-      }
-  }
-
-
 }

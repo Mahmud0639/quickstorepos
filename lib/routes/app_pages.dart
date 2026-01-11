@@ -5,14 +5,20 @@ import 'package:quick_store_pos/modules/edit_product/index.dart';
 import 'package:quick_store_pos/modules/home/index.dart';
 import 'package:quick_store_pos/modules/inventory/index.dart';
 import 'package:quick_store_pos/modules/inventory/pages/page.dart';
+import 'package:quick_store_pos/modules/report/binding.dart';
+import 'package:quick_store_pos/modules/report/view.dart';
 import 'package:quick_store_pos/modules/sales/index.dart';
 import 'package:quick_store_pos/modules/sales/sales_history/index.dart';
+import 'package:quick_store_pos/navigation/bottom_nav/binding.dart';
+import 'package:quick_store_pos/navigation/bottom_nav/view.dart';
 import 'package:quick_store_pos/routes/app_routes.dart';
 
 class AppPages{
-  static const INITIAL = AppRoutes.HOME;
+  static const INITIAL = AppRoutes.MAIN_NAV;
 
   static List<GetPage> routes = [
+    GetPage(name: AppRoutes.MAIN_NAV, page: ()=> const MainNavigationView(),binding: MainNavigationBinding()),
+    GetPage(name: AppRoutes.REPORT, page: ()=>const ReportView(),binding: ReportBinding()),
     GetPage(name: AppRoutes.HOME, page: ()=> const HomeView(),binding: HomeBinding()),
     GetPage(name: AppRoutes.ADD_PRODUCT, page: ()=> const AddProductView(),binding: AddProductBinding()),
     GetPage(name: AppRoutes.BILLING, page: ()=> const BillingView(),binding: BillingBinding()),
